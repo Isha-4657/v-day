@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Will you be my Valentine? 💕</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #ffe0ec, #ffd6f0, #ffecf5);
+      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #d63384;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(214, 51, 132, 0.2);
+    }
+
+    .main-gif {
+      width: 200px;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      transition: opacity 0.3s;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #yes-btn {
+      padding: 15px 40px;
+      font-size: 1.2rem;
+      font-family: inherit;
+      background: #ff69b4;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.2s, font-size 0.3s;
+      box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+      position: relative;
+      z-index: 2;
+    }
+
+    #yes-btn:hover { transform: scale(1.1); }
+
+    #no-btn {
+      padding: 15px 40px;
+      font-size: 1.2rem;
+      font-family: inherit;
+      background: #ddd;
+      color: #555;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #no-btn:hover { background: #ccc; }
+
+    #message {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      animation: pop 0.5s ease;
+    }
+
+    #message h2 { font-size: 2.2rem; color: #d63384; margin-bottom: 10px; }
+    #message p  { font-size: 1.2rem; color: #e75480; }
+    #message img { width: 220px; margin-top: 20px; border-radius: 16px; }
+
+    @keyframes pop {
+      0%   { transform: scale(0); opacity: 0; }
+      70%  { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    #sound-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-size: 1.5rem;
+      background: rgba(255,255,255,0.6);
+      border: 2px solid #ff69b4;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: transform 0.2s;
+      z-index: 100;
+    }
+
+    #sound-btn:hover { transform: scale(1.1); }
+
+    .heart {
+      position: fixed;
+      font-size: 1.5rem;
+      animation: floatUp linear infinite;
+      pointer-events: none;
+      opacity: 0.6;
+      z-index: 0;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(110vh) rotate(0deg); opacity: 0.6; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    .content { position: relative; z-index: 1; }
+
+    /* No-reaction speech bubble */
+    #reaction-bubble {
+      display: none;
+      position: fixed;
+      background: white;
+      border: 2px solid #ff69b4;
+      border-radius: 16px;
+      padding: 8px 14px;
+      font-size: 0.95rem;
+      color: #d63384;
+      pointer-events: none;
+      z-index: 200;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(255,105,180,0.3);
+      animation: bubblePop 0.3s ease;
+    }
+
+    @keyframes bubblePop {
+      0%   { transform: scale(0); opacity: 0; }
+      80%  { transform: scale(1.1); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="reaction-bubble"></div>
+
+  <div class="content">
+    <h1>Will you be my Valentine? 💕</h1>
+
+    <img class="main-gif" id="main-gif"
+      src="https://media.tenor.com/EBV7OT7ACfwAAAAj/u-u-qua-qua-u-quaa.gif"
+      alt="Cute character" />
+
+    <div class="buttons" id="btn-container">
+      <button id="yes-btn" onclick="sayYes()">Yes 💖</button>
+      <button id="no-btn">No 🙈</button>
+    </div>
+
+    <div id="message">
+      <h2>Yay!! 🎉 I knew it!</h2>
+      <p>You just made my day! 💕</p>
+      <img src="https://media.tenor.com/kDfSHvkCKqAAAAAj/happy-dance.gif" alt="Happy dance" />
+    </div>
+  </div>
+
+  <!-- Use your own audio file: audio.mp3 placed in same folder as index.html -->
+  <audio id="bg-music" loop>
+    <source src="audio.mp3" type="audio/mpeg"/>
+    <!-- fallback to online source if local file missing -->
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"/>
+  </audio>
+
+  <button id="sound-btn" onclick="toggleSound()" title="Toggle music">🔇</button>
+
+  <script>
+    let noCount = 0;
+    let isFixed = false;
+    let playing = false;
+
+    const noBtn = document.getElementById('no-btn');
+    const mainGif = document.getElementById('main-gif');
+    const bubble = document.getElementById('reaction-bubble');
+
+    // GIF to show when No is pressed — use no.gif in your repo
+    const noGif = 'no.gif';
+
+    // Reaction texts for each dodge
+    const reactions = [
+      "Noooo! 😭",
+      "Please!! 🥺",
+      "Come on... 😢",
+      "Don't do this! 💔",
+      "Last chance! 👀",
+      "Okay fine... 😤",
+      "PLEASE! 🙏",
+    ];
+
+    noBtn.addEventListener('mouseover', runAway);
+    noBtn.addEventListener('click', runAway);
+
+    function runAway() {
+      noCount++;
+
+      // Swap main image to the sad/no gif
+      mainGif.src = noGif;
+
+      // Show a floating reaction bubble near the No button
+      const msgText = reactions[Math.min(noCount - 1, reactions.length - 1)];
+      bubble.textContent = msgText;
+      bubble.style.display = 'block';
+
+      const rect = noBtn.getBoundingClientRect();
+      bubble.style.left = (rect.left + rect.width / 2 - 60) + 'px';
+      bubble.style.top  = (rect.top - 50) + 'px';
+
+      // Remove bubble after 1.2s
+      clearTimeout(bubble._timer);
+      bubble._timer = setTimeout(() => { bubble.style.display = 'none'; }, 1200);
+
+      // First time: switch button to fixed positioning
+      if (!isFixed) {
+        noBtn.style.position = 'fixed';
+        noBtn.style.left = rect.left + 'px';
+        noBtn.style.top  = rect.top  + 'px';
+        isFixed = true;
+      }
+
+      const btnW = noBtn.offsetWidth  + 20;
+      const btnH = noBtn.offsetHeight + 20;
+      const maxX = window.innerWidth  - btnW;
+      const maxY = window.innerHeight - btnH;
+
+      noBtn.style.left = Math.max(0, Math.random() * maxX) + 'px';
+      noBtn.style.top  = Math.max(0, Math.random() * maxY) + 'px';
+
+      // Grow the Yes button
+      const yesBtn = document.getElementById('yes-btn');
+      const newSize = 1.2 + noCount * 0.12;
+      yesBtn.style.fontSize = Math.min(newSize, 2.5) + 'rem';
+    }
+
+    function sayYes() {
+      document.getElementById('btn-container').style.display = 'none';
+      document.getElementById('main-gif').style.display = 'none';
+      bubble.style.display = 'none';
+      const msg = document.getElementById('message');
+      msg.style.display = 'flex';
+      spawnHearts();
+    }
+
+    function toggleSound() {
+      const music = document.getElementById('bg-music');
+      const btn   = document.getElementById('sound-btn');
+      if (playing) {
+        music.pause();
+        btn.textContent = '🔇';
+      } else {
+        music.play().catch(() => {});
+        btn.textContent = '🔊';
+      }
+      playing = !playing;
+    }
+
+    function spawnHearts() {
+      const hearts = ['💕','💖','💗','💓','💞','❤️','🌸'];
+      for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+          const el = document.createElement('div');
+          el.classList.add('heart');
+          el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+          el.style.left = Math.random() * 100 + 'vw';
+          el.style.animationDuration = (3 + Math.random() * 4) + 's';
+          el.style.animationDelay = (Math.random() * 2) + 's';
+          el.style.fontSize = (1 + Math.random() * 1.5) + 'rem';
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 8000);
+        }, i * 200);
+      }
+    }
+
+    function passiveHearts() {
+      const hearts = ['💕','💖','🌸','✨'];
+      const el = document.createElement('div');
+      el.classList.add('heart');
+      el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.animationDuration = (5 + Math.random() * 5) + 's';
+      el.style.fontSize = '1rem';
+      el.style.opacity = '0.3';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 11000);
+    }
+    setInterval(passiveHearts, 1200);
+  </script>
+</body>
+</html>
